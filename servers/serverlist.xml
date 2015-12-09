@@ -4,7 +4,7 @@
     <id>abysstream</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/abysstream.py</update_url>
     <active>true</active>
-    <version>2</version>
+    <version>3</version>
     <date>12/09/2015</date>
     <changes>Prima versione di Pelisalacarta 4</changes>
 </server>
@@ -13,7 +13,7 @@
     <id>adfly</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/adfly.py</update_url>
     <active>true</active>
-    <version>1</version>
+    <version>2</version>
     <date>12/09/2015</date>
     <changes>Prima versione di Pelisalacarta 4</changes>
 </server>
@@ -31,7 +31,7 @@
     <id>akstream</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/akstream.py</update_url>
     <active>true</active>
-    <version>3</version>
+    <version>4</version>
     <date>12/09/2015</date>
     <changes>Prima versione di Pelisalacarta 4</changes>
 </server>
@@ -184,9 +184,9 @@
     <id>exashare</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/exashare.py</update_url>
     <active>true</active>
-    <version>1</version>
-    <date>12/09/2015</date>
-    <changes>Prima versione di Pelisalacarta 4</changes>
+    <version>3</version>
+    <date>31/10/2015</date>
+    <changes>Fix Cavalieri dZ</changes>
 </server>
 
 <server>
@@ -328,8 +328,8 @@
     <id>flashx</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/flashx.py</update_url>
     <active>true</active>
-    <version>1</version>
-    <date>12/09/2015</date>
+    <version>2</version>
+    <date>24/11/2015</date>
     <changes>Prima versione di Pelisalacarta 4</changes>
 </server>
 
@@ -382,14 +382,23 @@
     <id>googledrive</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/googledrive.py</update_url>
     <active>true</active>
-    <version>3</version>
-    <date>15/10/2015</date>
+    <version>4</version>
+    <date>17/11/2015</date>
     <changes>Migliorata compatibilità</changes>
 </server>
 
 <server>
     <id>googlevideo</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/googlevideo.py</update_url>
+    <active>true</active>
+    <version>2</version>
+    <date>12/09/2015</date>
+    <changes>Prima versione di Pelisalacarta 4</changes>
+</server>
+
+<server>
+    <id>hdload</id>
+    <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/hdload.py</update_url>
     <active>true</active>
     <version>1</version>
     <date>12/09/2015</date>
@@ -661,9 +670,9 @@
     <id>nowvideo</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/nowvideo.py</update_url>
     <active>true</active>
-    <version>2</version>
-    <date>22/10/2015</date>
-    <changes>Italian alert</changes>
+    <version>5</version>
+    <date>20/11/2015</date>
+    <changes>Reverted Doc version</changes>
 </server>
 
 <server>
@@ -688,7 +697,7 @@
     <id>okru</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/okru.py</update_url>
     <active>true</active>
-    <version>1</version>
+    <version>2</version>
     <date>12/09/2015</date>
     <changes>Prima versione di Pelisalacarta 4</changes>
 </server>
@@ -715,7 +724,7 @@
     <id>openload</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/openload.py</update_url>
     <active>true</active>
-    <version>3</version>
+    <version>4</version>
     <date>12/09/2015</date>
     <changes>Prima versione di Pelisalacarta 4</changes>
 </server>
@@ -859,7 +868,7 @@
     <id>servertools</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/servertools.py</update_url>
     <active>true</active>
-    <version>4</version>
+    <version>6</version>
     <date>29/09/2015</date>
     <changes>Prima versione di Pelisalacarta 4</changes>
 </server>
@@ -904,7 +913,7 @@
     <id>spruto</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/spruto.py</update_url>
     <active>true</active>
-    <version>1</version>
+    <version>2</version>
     <date>12/09/2015</date>
     <changes>Prima versione di Pelisalacarta 4</changes>
 </server>
@@ -958,7 +967,7 @@
     <id>thevideome</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/thevideome.py</update_url>
     <active>true</active>
-    <version>3</version>
+    <version>5</version>
     <date>12/09/2015</date>
     <changes>Prima versione di Pelisalacarta 4</changes>
 </server>
@@ -1156,7 +1165,7 @@
     <id>videomega</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/videomega.py</update_url>
     <active>true</active>
-    <version>3</version>
+    <version>5</version>
     <date>04/10/2015</date>
     <changes>robalo fix proposal</changes>
 </server>
@@ -1246,7 +1255,7 @@
     <id>vidtome</id>
     <update_url>https://raw.githubusercontent.com/Zanzibar82/plugin.video.streamondemand/master/servers/vidtome.py</update_url>
     <active>true</active>
-    <version>2</version>
+    <version>3</version>
     <date>12/09/2015</date>
     <changes>Prima versione di Pelisalacarta 4</changes>
 </server>

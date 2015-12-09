@@ -35,7 +35,7 @@ def mainlist(item):
                      title="[COLOR azure]Al Cinema[/COLOR]",
                      action="peliculas",
                      url="%s/category/news/" % host,
-                     thumbnail="http://dc584.4shared.com/img/XImgcB94/s7/13feaf0b538/saquinho_de_pipoca_01"),
+                     thumbnail="http://orig03.deviantart.net/6889/f/2014/079/7/b/movies_and_popcorn_folder_icon_by_matheusgrilo-d7ay4tw.png"),
                 Item(channel=__channel__,
                      title="[COLOR azure]HD Quality[/COLOR]",
                      action="peliculas",
@@ -52,6 +52,11 @@ def mainlist(item):
                      extra="serie",
                      url="%s/category/serie-tv/" % host,
                      thumbnail="http://xbmc-repo-ackbarr.googlecode.com/svn/trunk/dev/skin.cirrus%20extended%20v2/extras/moviegenres/New%20TV%20Shows.png"),
+                Item(channel=__channel__,
+                     title="[COLOR yellow]Cerca Serie TV...[/COLOR]",
+                     action="search",
+                     extra="serie",
+                     thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search"),
                 Item(channel=__channel__,
                      title="[COLOR azure]Categorie[/COLOR]",
                      action="categorias",
@@ -247,7 +252,7 @@ def episodios(item):
 def findvid_serie(item):
     logger.info("[italianstream.py] findvideos")
 
-    ## Descarga la página
+    # Descarga la página
     data = item.extra
 
     itemlist = servertools.find_video_items(data=data)

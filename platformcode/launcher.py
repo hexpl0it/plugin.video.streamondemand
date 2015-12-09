@@ -5,14 +5,14 @@
 # http://blog.tvalacarta.info/plugin-xbmc/
 #------------------------------------------------------------
 
+import os
+import re
+import sys
 import urllib
 import urllib2
-import os
-import sys
-import re
 
-from core import logger
 from core import config
+from core import logger
 
 
 def run():
@@ -349,7 +349,7 @@ def run():
         ventana_error = xbmcgui.Dialog()
         # Agarra los errores surgidos localmente enviados por las librerias internas
         if hasattr(e, 'reason'):
-            logger.info("Razon del error, codigo: %d , Razon: %s" %(e.reason[0],e.reason[1]))
+            logger.info("Razon del error, codigo: %s , Razon: %s" % (e.reason[0], e.reason[1]))
             texto = config.get_localized_string(30050) # "No se puede conectar con el sitio web"
             ok = ventana_error.ok ("plugin", texto)
         # Agarra los errores con codigo de respuesta del servidor externo solicitado     

@@ -65,7 +65,6 @@ def mainlist(item):
                 Item(channel=__channel__,
                      action="search",
                      title="[COLOR yellow]Cerca Film...[/COLOR]",
-                     url=host,
                      thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search"),
                 Item(channel=__channel__,
                      action="serietv",
@@ -75,7 +74,6 @@ def mainlist(item):
                 Item(channel=__channel__,
                      action="search",
                      title="[COLOR orange]Cerca Serie...[/COLOR]",
-                     url=host,
                      extra="serie",
                      thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search")]
 
@@ -86,7 +84,7 @@ def mainlist(item):
 def search(item, texto):
     logger.info("[itafilmtv.py] " + item.url + " search " + texto)
 
-    item.url += "/?do=search&subaction=search&story=" + texto
+    item.url = host + "/?do=search&subaction=search&story=" + texto
 
     try:
         if item.extra == "serie":

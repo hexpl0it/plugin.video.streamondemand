@@ -1,0 +1,5 @@
+v5.1.6
+- Update Ricerca Globale (thanks giordiz999)
+- Fixed channels: SerieHD, FilmitaliaTV, GuardaSerie, AnimeSubITA
+- Fixed servers: okru, videomega, thevideome
+

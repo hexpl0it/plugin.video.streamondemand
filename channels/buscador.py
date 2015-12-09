@@ -8,7 +8,6 @@ import os
 from core import config
 from core import logger
 from core.item import Item
-from core import scrapertools
 
 __channel__ = "buscador"
 
@@ -27,7 +26,12 @@ def mainlist(item, preferred_thumbnail="squares"):
     itemlist = [
         Item(channel=__channel__,
              action="search",
-             title="[COLOR yellow]Effettuare una nuova ricerca...[/COLOR]")]
+             title="[COLOR yellow]Nuova ricerca film...[/COLOR]"),
+        Item(channel=__channel__,
+             action="search",
+             category="serie",
+             title="[COLOR yellow]Nuova ricerca serie tv...[/COLOR]"),
+    ]
 
     saved_searches_list = get_saved_searches(item.channel)
 
@@ -75,7 +79,7 @@ def do_search(item):
     import threading
     import Queue
 
-    master_exclude_data_file = os.path.join(config.get_runtime_path(), "resources", "global_search_exclusion.txt")
+    master_exclude_data_file = os.path.join(config.get_runtime_path(), "resources", "sodsearch.txt")
     logger.info("streamondemand.channels.buscador master_exclude_data_file=" + master_exclude_data_file)
 
     channels_path = os.path.join(config.get_runtime_path(), "channels", '*.py')
@@ -110,10 +114,10 @@ def do_search(item):
             # http://docs.python.org/library/imp.html?highlight=imp#module-imp
             obj = imp.load_source(basename_without_extension, infile)
             logger.info("streamondemand.channels.buscador cargado " + basename_without_extension + " de " + infile)
-            channel_result_itemlist.extend(obj.search(Item(), tecleado))
-            for item in channel_result_itemlist:
-                item.title = item.title + " [COLOR orange]su[/COLOR] [COLOR green]" + basename_without_extension + "[/COLOR]"
-                item.viewmode = "list"
+            channel_result_itemlist.extend(obj.search(Item(extra=item.category), tecleado))
+            for local_item in channel_result_itemlist:
+                local_item.title = " [COLOR azure] " + local_item.title + " [/COLOR] [COLOR orange]su[/COLOR] [COLOR green]" + basename_without_extension + "[/COLOR]"
+                local_item.viewmode = "list"
         except:
             import traceback
             logger.error(traceback.format_exc())

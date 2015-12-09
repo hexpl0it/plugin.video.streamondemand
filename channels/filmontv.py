@@ -73,7 +73,8 @@ def tvoggi(item):
     data = scrapertools.cache_page(item.url)
 
     # Extrae las entradas (carpetas)
-    patron = '<img src=\'(.*?)\'[^>]+>\s*</div>\s*<div[^>]+>[^>]+>\s*<div[^>]+>\s*<h3 >(.*?)</h3>\s*<div[^>]+>[^>]+>[^>]+>(.*?)</div>'
+    patron = '<div class="col-xs-5 box-immagine">\s*<img src="(.*?)"[^>]+>\s*</div>\s*[^>]+>[^>]+>\s*[^>]+>\s*[^>]+>(.*?)</div>\s*[^>]+>[^>]+>[^>]+>[^>]+>(.*?)</div>'
+#    patron = '<img src=\'(.*?)\'[^>]+>\s*</div>\s*<div[^>]+>[^>]+>\s*<div[^>]+>\s*<h3 >(.*?)</h3>\s*<div[^>]+>[^>]+>[^>]+>(.*?)</div>'
     matches = re.compile(patron, re.DOTALL).findall(data)
 
     for scrapedthumbnail, scrapedtitle, scrapedtv in matches:
@@ -113,7 +114,7 @@ def do_search(item):
     import threading
     import Queue
 
-    master_exclude_data_file = os.path.join(config.get_runtime_path(), "resources", "filmontv.txt")
+    master_exclude_data_file = os.path.join(config.get_runtime_path(), "resources", "sodsearch.txt")
     logger.info("streamondemand.channels.buscador master_exclude_data_file=" + master_exclude_data_file)
 
     channels_path = os.path.join(config.get_runtime_path(), "channels", '*.py')
@@ -150,7 +151,7 @@ def do_search(item):
             logger.info("streamondemand.channels.buscador cargado " + basename_without_extension + " de " + infile)
             channel_result_itemlist.extend(obj.search(Item(), tecleado))
             for item in channel_result_itemlist:
-                item.title += " [COLOR green]Guarda in streaming[/COLOR]"
+                item.title = " [COLOR azure] " + item.title + " [/COLOR] [COLOR orange]su[/COLOR] [COLOR green]" + basename_without_extension + "[/COLOR]"
                 item.viewmode = "list"
         except:
             import traceback

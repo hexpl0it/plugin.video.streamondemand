@@ -4,12 +4,12 @@
 # Canal para piratestreaming
 # http://blog.tvalacarta.info/plugin-xbmc/streamondemand.
 # ------------------------------------------------------------
-import urlparse
 import re
 import sys
+import urlparse
 
-from core import logger
 from core import config
+from core import logger
 from core import scrapertools
 from core.item import Item
 from servers import servertools
@@ -59,14 +59,19 @@ def mainlist(item):
                      url=host,
                      thumbnail="http://xbmc-repo-ackbarr.googlecode.com/svn/trunk/dev/skin.cirrus%20extended%20v2/extras/moviegenres/All%20Movies%20by%20Genre.png"),
                 Item(channel=__channel__,
+                     title="[COLOR yellow]Cerca...[/COLOR]",
+                     action="search",
+                     thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search"),
+                Item(channel=__channel__,
                      title="[COLOR azure]Serie TV[/COLOR]",
                      extra="serie",
                      action="peliculas",
                      url="%s/watch-genre/serie-tv" % host,
                      thumbnail="http://xbmc-repo-ackbarr.googlecode.com/svn/trunk/dev/skin.cirrus%20extended%20v2/extras/moviegenres/New%20TV%20Shows.png"),
                 Item(channel=__channel__,
-                     title="[COLOR yellow]Cerca...[/COLOR]",
+                     title="[COLOR yellow]Cerca Serie TV...[/COLOR]",
                      action="search",
+                     extra="serie",
                      thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search")]
 
     return itemlist
@@ -77,7 +82,8 @@ def categorias(item):
 
     # Descarga la pagina
     data = scrapertools.cache_page(item.url, headers=headers)
-    bloque = scrapertools.get_match(data, '<select class="select_join" onchange="location.href = this.value" size="1" name="linkIole2">(.*?)</select>')
+    bloque = scrapertools.get_match(data,
+                                    '<select class="select_join" onchange="location.href = this.value" size="1" name="linkIole2">(.*?)</select>')
 
     # Extrae las entradas (carpetas)
     patron = r'<option[^>]+><a href=\'([^\']+)\'>(.*?)</a></option>'
@@ -133,7 +139,7 @@ def search_peliculas(item):
             "title=[" + scrapedtitle + "], url=[" + scrapedurl + "], thumbnail=[" + scrapedthumbnail + "]")
         itemlist.append(
             Item(channel=__channel__,
-                 action="findvideos",
+                 action="episodios" if item.extra == "serie" else "findvideos",
                  fulltitle=scrapedtitle,
                  show=scrapedtitle,
                  title="[COLOR azure]" + scrapedtitle + "[/COLOR]",
@@ -250,6 +256,31 @@ def latest(item):
 
 
 def episodios(item):
+    def load_episodios(html, item, itemlist):
+        for data in html.splitlines():
+            # Extrae las entradas
+            end = data.find('<a ')
+            if end > 0:
+                scrapedtitle = re.sub(r'<[^>]*>', '', data[:end]).strip()
+            else:
+                scrapedtitle = ''
+            if scrapedtitle == '':
+                patron = '<a\s*href="[^"]+"(?:\s*target="_blank")?>([^<]+)</a>'
+                scrapedtitle = scrapertools.find_single_match(data, patron).strip()
+            title = scrapertools.find_single_match(scrapedtitle, '\d+[^\d]+\d+')
+            if title == '':
+                title = scrapedtitle
+            if title != '':
+                itemlist.append(
+                    Item(channel=__channel__,
+                         action="findvideos",
+                         title=title,
+                         url=item.url,
+                         thumbnail=item.thumbnail,
+                         extra=data,
+                         fulltitle=item.fulltitle,
+                         show=item.show))
+
     logger.info("streamondemand.tantifilm episodios")
 
     itemlist = []
@@ -257,20 +288,31 @@ def episodios(item):
     data = scrapertools.cache_page(item.url, headers=headers)
     data = scrapertools.decodeHtmlentities(data)
 
-    patron = '<p>((.*?)<a href="[^"]+" target="_blank">([^<]+)</a>)((?:.*?<a href="[^"]+" target="_blank">[^<]+</a>)*)'
-    for data1, titolo1, titolo2, data2 in re.compile(patron).findall(data):
-        scrapedtitle = titolo2 if titolo1 == '' else titolo1
-        scrapedtitle = scrapedtitle.strip()
+    start = data.find('<div class="sp-wrap sp-wrap-blue">')
+    end = data.find('<div id="disqus_thread">', start)
 
-        itemlist.append(
-            Item(channel=__channel__,
-                 action="findvideos",
-                 title=scrapedtitle,
-                 url=item.url,
-                 thumbnail=item.thumbnail,
-                 extra=data1 + data2,
-                 fulltitle=item.fulltitle,
-                 show=item.show))
+    data_sub = data[start:end]
+
+    starts = []
+    patron = r".*?STAGIONE|MINISERIE|WEBSERIE|SERIE"
+    matches = re.compile(patron, re.IGNORECASE).finditer(data_sub)
+    for match in matches:
+        season_title = match.group()
+        if season_title != '':
+            starts.append(match.end())
+
+    i = 1
+    len_starts = len(starts)
+
+    while i <= len_starts:
+        inizio = starts[i - 1]
+        fine = starts[i] if i < len_starts else -1
+
+        html = data_sub[inizio:fine]
+
+        load_episodios(html, item, itemlist)
+
+        i += 1
 
     if len(itemlist) == 0:
         patron = '<a href="(#wpwm-tabs-\d+)">([^<]+)</a></li>'

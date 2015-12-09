@@ -30,34 +30,22 @@ def find_videos(text):
     encontrados = set()
     devuelve = []
 
-    patronvideos = r'//(?:www.)?spruto.tv/iframe_embed.php\?video_id=(\d+)'
-    logger.info("[spruto.py] find_videos #" + patronvideos + "#")
-    
-    matches = re.compile(patronvideos, re.DOTALL).findall(text)
+    patronvideos = [r'//(?:www.)?spruto.tv/iframe_embed.php\?video_id=(\d+)',
+                    r'//(?:www.)?spruto.tv/videos/(\d+)']
 
-    for media_id in matches:
-        titulo = "[spruto]"
-        url = 'http://www.spruto.tv/iframe_embed.php?video_id=%s' % media_id
-        if url not in encontrados:
-            logger.info("  url=" + url)
-            devuelve.append([titulo, url, 'spruto'])
-            encontrados.add(url)
-        else:
-            logger.info("  url duplicada=" + url)
+    for patron in patronvideos:
+        logger.info("[spruto.py] find_videos #" + patron + "#")
 
-    patronvideos = r'//(?:www.)?spruto.tv/videos/(\d+)'
-    logger.info("[spruto.py] find_videos #" + patronvideos + "#")
+        matches = re.compile(patron, re.DOTALL).findall(text)
 
-    matches = re.compile(patronvideos, re.DOTALL).findall(text)
-
-    for media_id in matches:
-        titulo = "[spruto]"
-        url = 'http://www.spruto.tv/iframe_embed.php?video_id=%s' % media_id
-        if url not in encontrados:
-            logger.info("  url=" + url)
-            devuelve.append([titulo, url, 'spruto'])
-            encontrados.add(url)
-        else:
-            logger.info("  url duplicada=" + url)
+        for media_id in matches:
+            titulo = "[spruto]"
+            url = 'http://www.spruto.tv/iframe_embed.php?video_id=%s' % media_id
+            if url not in encontrados:
+                logger.info("  url=" + url)
+                devuelve.append([titulo, url, 'spruto'])
+                encontrados.add(url)
+            else:
+                logger.info("  url duplicada=" + url)
 
     return devuelve

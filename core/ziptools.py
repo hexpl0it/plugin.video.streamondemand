@@ -1,19 +1,21 @@
 # -*- coding: iso-8859-1 -*-
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # pelisalacarta - XBMC Plugin
 # Zip Tools
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
-#------------------------------------------------------------
-import base64, re, urllib, string, sys, zipfile, os, os.path
-import config
+# ------------------------------------------------------------
+import zipfile
+import os
+import os.path
+
 import logger
 
-class ziptools:
 
+class ziptools:
     def extract(self, file, dir):
         logger.info("file=%s" % file)
         logger.info("dir=%s" % dir)
-        
+
         if not dir.endswith(':') and not os.path.exists(dir):
             os.mkdir(dir)
 
@@ -24,31 +26,26 @@ class ziptools:
         for name in zf.namelist():
             logger.info("name=%s" % name)
             if not name.endswith('/'):
+                content = zf.read(name)
+                name = name.replace('-master', '')
                 logger.info("no es un directorio")
                 try:
-                    (path,filename) = os.path.split(os.path.join(dir, name))
+                    (path, filename) = os.path.split(os.path.join(dir, name))
                     logger.info("path=%s" % path)
                     logger.info("name=%s" % name)
-                    os.makedirs( path )
+                    os.makedirs(path)
                 except:
                     pass
                 outfilename = os.path.join(dir, name)
                 logger.info("outfilename=%s" % outfilename)
                 try:
                     outfile = open(outfilename, 'wb')
-                    outfile.write(zf.read(name))
+                    outfile.write(content)
                 except:
-                    logger.info("Error en fichero "+name)
+                    logger.info("Error en fichero " + name)
 
     def _createstructure(self, file, dir):
         self._makedirs(self._listdirs(file), dir)
-
-    def create_necessary_paths(filename):
-        try:
-            (path,name) = os.path.split(filename)
-            os.makedirs( path)
-        except:
-            pass
 
     def _makedirs(self, directories, basedir):
         for dir in directories:
@@ -61,7 +58,7 @@ class ziptools:
         dirs = []
         for name in zf.namelist():
             if name.endswith('/'):
-                dirs.append(name)
+                dirs.append(name.replace('-master', ''))
 
         dirs.sort()
         return dirs

@@ -8,8 +8,8 @@
 
 import re
 
-from core import scrapertools
 from core import logger
+from core import scrapertools
 
 headers = [
     ['User-Agent', 'Mozilla/5.0 (Windows NT 6.1; rv:38.0) Gecko/20100101 Firefox/38.0'],
@@ -118,7 +118,7 @@ class AADecoder(object):
         # get data
         pattern = (r"\(ﾟДﾟ\)\[ﾟoﾟ\]\+ (.+?)\(ﾟДﾟ\)\[ﾟoﾟ\]\)")
         result = re.search(pattern, self.encoded_str, re.DOTALL)
-        if result == None:
+        if result is None:
             print "AADecoder: data not found"
             return False
 
@@ -509,7 +509,7 @@ def get_video_url(page_url, premium=False, user="", password="", video_password=
             content = JJDecoder(unpacked).decode()
 
     if content:
-        patron = 'src=\s*?"(.*?)\?'
+        patron = r'window\.vr=\s*?"(.*?)\?'
         matches = re.compile(patron, re.IGNORECASE).findall(content.replace('\\', ''))
         if len(matches) > 0:
             # URL del vídeo
@@ -540,4 +540,3 @@ def find_videos(text):
             logger.info("  url duplicada=" + url)
 
     return devuelve
-

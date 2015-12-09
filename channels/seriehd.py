@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # streamondemand.- XBMC Plugin
 # Canal para seriehd - based on guardaserie channel
 # http://blog.tvalacarta.info/plugin-xbmc/streamondemand.
-#------------------------------------------------------------
-import urlparse,urllib2,urllib,re
-import os, sys
+# ------------------------------------------------------------
+import binascii
+import re
+import sys
+import time
+import urllib2
 
-from core import logger
 from core import config
+from core import logger
 from core import scrapertools
 from core.item import Item
 from servers import servertools
@@ -20,107 +23,147 @@ __title__ = "Serie HD"
 __language__ = "IT"
 
 headers = [
-    ['Host','www.seriehd.org'],
-    ['User-Agent','Mozilla/5.0 (Windows NT 6.1; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0'],
-    ['Accept-Encoding','gzip, deflate']
+    ['User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0'],
+    ['Accept-Encoding', 'gzip, deflate']
 ]
 
 host = "http://www.seriehd.org"
 
+
 def isGeneric():
     return True
 
-def mainlist( item ):
-    logger.info( "[seriehd.py] mainlist" )
 
-    itemlist = []
+def mainlist(item):
+    logger.info("[seriehd.py] mainlist")
 
-    itemlist.append( Item( channel=__channel__, action="fichas", title="[COLOR azure]Serie TV[/COLOR]", url=host+"/serie-tv-streaming/", thumbnail="http://i.imgur.com/rO0ggX2.png" ) )
-    itemlist.append( Item( channel=__channel__, action="sottomenu", title="[COLOR orange]Sottomenu...[/COLOR]", url=host, thumbnail="http://i37.photobucket.com/albums/e88/xzener/NewIcons.png" ) )
-    itemlist.append( Item( channel=__channel__, action="search", title="[COLOR green]Cerca...[/COLOR]", thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search") )
-
+    itemlist = [Item(channel=__channel__,
+                     action="fichas",
+                     title="[COLOR azure]Serie TV[/COLOR]",
+                     url=host + "/serie-tv-streaming/",
+                     thumbnail="http://i.imgur.com/rO0ggX2.png"),
+                Item(channel=__channel__,
+                     action="sottomenu",
+                     title="[COLOR orange]Sottomenu...[/COLOR]",
+                     url=host,
+                     thumbnail="http://i37.photobucket.com/albums/e88/xzener/NewIcons.png"),
+                Item(channel=__channel__,
+                     action="search",
+                     title="[COLOR green]Cerca...[/COLOR]",
+                     thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search")]
 
     return itemlist
 
-def search( item,texto ):
-    logger.info( "[seriehd.py] search" )
 
-    item.url=host + "/?s=" + texto
+def search(item, texto):
+    logger.info("[seriehd.py] search")
+
+    item.url = host + "/?s=" + texto
 
     try:
-        return fichas( item )
+        return fichas(item)
 
     ## Se captura la excepción, para no interrumpir al buscador global si un canal falla.
     except:
         import sys
         for line in sys.exc_info():
-            logger.error( "%s" % line )
+            logger.error("%s" % line)
         return []
 
-def sottomenu( item ):
-    logger.info( "[seriehd.py] sottomenu" )
+
+def sottomenu(item):
+    logger.info("[seriehd.py] sottomenu")
     itemlist = []
 
-    data = scrapertools.cache_page( item.url )
+    data = anti_cloudflare(item.url)
 
-    scrapertools.get_match( data, '<ul class="sub-menu">(.*?)</ul>' )
+    patron = '<a href="([^"]+)">([^<]+)</a>'
 
-    patron  = '<a href="([^"]+)">([^<]+)</a>'
-
-    matches = re.compile( patron, re.DOTALL ).findall( data )
+    matches = re.compile(patron, re.DOTALL).findall(data)
 
     for scrapedurl, scrapedtitle in matches:
-
-        itemlist.append( Item( channel=__channel__, action="fichas", title=scrapedtitle, url=scrapedurl ) )
+        itemlist.append(
+            Item(channel=__channel__,
+                 action="fichas",
+                 title=scrapedtitle,
+                 url=scrapedurl))
 
     ## Elimina 'Serie TV' de la lista de 'sottomenu'
     itemlist.pop(0)
 
     return itemlist
 
-def fichas( item ):
-    logger.info( "[seriehd.py] fichas" )
+
+def fichas(item):
+    logger.info("[seriehd.py] fichas")
     itemlist = []
 
-    data = scrapertools.cache_page( item.url )
+    data = anti_cloudflare(item.url)
 
-    patron  = '<h2>(.*?)</h2>\s*'
+    ## ------------------------------------------------
+    cookies = ""
+    matches = re.compile('(.seriehd.org.*?)\n', re.DOTALL).findall(config.get_cookie_data())
+    for cookie in matches:
+        name = cookie.split('\t')[5]
+        value = cookie.split('\t')[6]
+        cookies += name + "=" + value + ";"
+    headers.append(['Cookie', cookies[:-1]])
+    import urllib
+    _headers = urllib.urlencode(dict(headers))
+    ## ------------------------------------------------
+
+    patron = '<h2>(.*?)</h2>\s*'
     patron += '<img src="(.*?)" alt=".*?"/>\s*'
     patron += '<A HREF="(.*?)">'
 
-    matches = re.compile( patron, re.DOTALL ).findall( data )
+    matches = re.compile(patron, re.DOTALL).findall(data)
 
     for scrapedtitle, scrapedthumbnail, scrapedurl in matches:
+        scrapedthumbnail += "|" + _headers
 
-        itemlist.append( Item( channel=__channel__, action="episodios", title=scrapedtitle, fulltitle=scrapedtitle, url=scrapedurl, show=scrapedtitle, thumbnail=scrapedthumbnail ) )
+        itemlist.append(
+            Item(channel=__channel__,
+                 action="episodios",
+                 title=scrapedtitle,
+                 fulltitle=scrapedtitle,
+                 url=scrapedurl,
+                 show=scrapedtitle,
+                 thumbnail=scrapedthumbnail))
 
-    #<div class='wp-pagenavi'><span class='current'>1</span><a rel='nofollow' class='page larger' href='http://www.seriehd.org/serie-tv-streaming/page/2/'>2</a></div></div></div>
-    next_page = scrapertools.find_single_match( data, "<span class='current'>\d+</span><a rel='nofollow' class='page larger' href='([^']+)'>\d+</a>" )
+    patron = "<span class='current'>\d+</span><a rel='nofollow' class='page larger' href='([^']+)'>\d+</a>"
+    next_page = scrapertools.find_single_match(data, patron)
     if next_page != "":
-        itemlist.append( Item( channel=__channel__, action="fichas", title="[COLOR orange]Successivo>>[/COLOR]", url=next_page ) )
+        itemlist.append(
+            Item(channel=__channel__,
+                 action="fichas",
+                 title="[COLOR orange]Successivo>>[/COLOR]",
+                 url=next_page))
 
     return itemlist
 
+
 def episodios(item):
-    logger.info( "[seriehd.py] episodios" )
+    logger.info("[seriehd.py] episodios")
 
     itemlist = []
 
-    data = scrapertools.cache_page( item.url )
+    data = anti_cloudflare(item.url)
 
-    seasons_data = scrapertools.get_match( data, '<select name="stagione" id="selSt">(.*?)</select>' )
-    seasons = re.compile( 'data-stagione="(\d+)"', re.DOTALL ).findall( seasons_data )
+    patron = '<select name="stagione" id="selSt">(.*?)</select>'
+    seasons_data = scrapertools.find_single_match(data, patron)
+    seasons = re.compile('data-stagione="(\d+)"', re.DOTALL).findall(seasons_data)
 
     for scrapedseason in seasons:
 
-        episodes_data = scrapertools.get_match( data, '<div class="list[^"]+" data-stagione="' + scrapedseason + '">(.*?)</div>' )
-        episodes = re.compile( 'data-id="(\d+)"', re.DOTALL ).findall( episodes_data )
+        patron = '<div class="list[^"]+" data-stagione="' + scrapedseason + '">(.*?)</div>'
+        episodes_data = scrapertools.find_single_match(data, patron)
+        episodes = re.compile('data-id="(\d+)"', re.DOTALL).findall(episodes_data)
 
         for scrapedepisode in episodes:
 
-            season = str ( int( scrapedseason ) + 1 )
-            episode = str ( int( scrapedepisode ) + 1 )
-            if len( episode ) == 1: episode = "0" + episode
+            season = str(int(scrapedseason) + 1)
+            episode = str(int(scrapedepisode) + 1)
+            if len(episode) == 1: episode = "0" + episode
 
             title = season + "x" + episode
 
@@ -128,47 +171,114 @@ def episodios(item):
             ## [host+path]?[argumentos]?[Referer]
             url = item.url + "?st_num=" + scrapedseason + "&pt_num=" + scrapedepisode + "?" + item.url
 
-            itemlist.append( Item( channel=__channel__, action="findvideos", title=title, url=url, fulltitle=item.fulltitle, show=item.show, thumbnail=item.thumbnail) )
+            itemlist.append(
+                Item(channel=__channel__,
+                     action="findvideos",
+                     title=title,
+                     url=url,
+                     fulltitle=item.fulltitle,
+                     show=item.show,
+                     thumbnail=item.thumbnail))
 
-    if config.get_library_support():
-        itemlist.append( Item(channel=__channel__, title=item.title, url=item.url, action="add_serie_to_library", extra="episodios", show=item.show) )
-        itemlist.append( Item(channel=item.channel, title="Scarica tutti gli episodi della serie", url=item.url, action="download_all_episodes", extra="episodios", show=item.show) )
-			
-    return itemlist
-
-def findvideos( item ):
-    logger.info( "[seriehd.py] findvideos" )
-
-    itemlist = []
-
-    url = item.url.split( '?' )[0]
-    post = item.url.split( '?' )[1]
-    referer = item.url.split( '?' )[2]
-
-    headers.append( [ 'Referer', referer ] )
-
-    data = scrapertools.cache_page( url, post=post, headers=headers )
-
-    url = scrapertools.get_match( data, '<iframe id="iframeVid" width="100%" height="500px" src="([^"]+)" allowfullscreen></iframe>' )
-
-    server = url.split( '/' )[2]
-
-    title = "[" + server + "] " + item.title
-
-    itemlist.append( Item( channel=__channel__, action="play", title=title, url=url, fulltitle=item.fulltitle, show=item.show, thumbnail=item.thumbnail, folder=False ) )
+    if config.get_library_support() and len(itemlist) != 0:
+        itemlist.append(
+            Item(channel=__channel__,
+                 title=item.title,
+                 url=item.url,
+                 action="add_serie_to_library",
+                 extra="episodios",
+                 show=item.show))
+        itemlist.append(
+            Item(channel=item.channel,
+                 title="Scarica tutti gli episodi della serie",
+                 url=item.url,
+                 action="download_all_episodes",
+                 extra="episodios",
+                 show=item.show))
 
     return itemlist
 
-def play( item ):
-    logger.info( "[seriehd.py] play" )
 
-    itemlist = servertools.find_video_items( data=item.url )
+def findvideos(item):
+    logger.info("[seriehd.py] findvideos")
+
+    url = item.url.split('?')[0]
+    post = item.url.split('?')[1]
+    referer = item.url.split('?')[2]
+
+    headers.append(['Referer', referer])
+
+    data = scrapertools.cache_page(url, post=post, headers=headers)
+
+    patron = '<iframe id="iframeVid" width="100%" height="500px" src="([^"]+)" allowfullscreen></iframe>'
+    url = scrapertools.find_single_match(data, patron)
+
+    if 'hdpass.link' in url:
+        data = scrapertools.cache_page(url, headers=headers)
+
+        start = data.find('<ul id="mirrors">')
+        end = data.find('</ul>', start)
+        data = data[start:end]
+
+        patron = '<form method="get" action="">\s*'
+        patron += '<input type="hidden" name="([^"]+)" value="([^"]+)"/>\s*'
+        patron += '<input type="hidden" name="([^"]+)" value="([^"]+)"/>\s*'
+        patron += '(?:<input type="hidden" name="([^"]+)" value="([^"]+)"/>\s*)?'
+        patron += '<input type="submit" class="[^"]*" name="([^"]+)" value="([^"]+)"/>\s*'
+        patron += '</form>'
+
+        html = []
+        for name1, val1, name2, val2, name3, val3, name4, val4 in re.compile(patron).findall(data):
+            if name3 == '' and val3 == '':
+                get_data = '%s=%s&%s=%s&%s=%s' % (name1, val1, name2, val2, name4, val4)
+            else:
+                get_data = '%s=%s&%s=%s&%s=%s&%s=%s' % (name1, val1, name2, val2, name3, val3, name4, val4)
+            tmp_data = scrapertools.cache_page('http://hdpass.link/film.php?randid=0&' + get_data, headers=headers)
+            patron = r'; eval\(unescape\("(.*?)",(\[".*?;"\]),(\[".*?\])\)\);'
+            [(par1, par2, par3)] = re.compile(patron, re.DOTALL).findall(tmp_data)
+            par2 = eval(par2, {'__builtins__': None}, {})
+            par3 = eval(par3, {'__builtins__': None}, {})
+            tmp_data = unescape(par1, par2, par3)
+            if 'Google' in get_data:
+                tmp_data = scrapertools.find_single_match(tmp_data, r'tvar Data = \\"([^\\]+)\\";')
+                tmp_data = binascii.unhexlify(tmp_data)
+            html.append(tmp_data.replace(r'\/', '/'))
+        url = ''.join(html)
+
+    itemlist = servertools.find_video_items(data=url)
 
     for videoitem in itemlist:
-        videoitem.title = item.show
+        videoitem.title = item.title + videoitem.title
         videoitem.show = item.show
         videoitem.fulltitle = item.fulltitle
         videoitem.thumbnail = item.thumbnail
         videoitem.channel = __channel__
 
     return itemlist
+
+
+def anti_cloudflare(url):
+    # global headers
+
+    try:
+        resp_headers = scrapertools.get_headers_from_response(url, headers=headers)
+        resp_headers = dict(resp_headers)
+    except urllib2.HTTPError, e:
+        resp_headers = e.headers
+
+    if 'refresh' in resp_headers:
+        time.sleep(int(resp_headers['refresh'][:1]))
+
+        scrapertools.get_headers_from_response(host + "/" + resp_headers['refresh'][7:], headers=headers)
+
+    return scrapertools.cache_page(url, headers=headers)
+
+
+def unescape(par1, par2, par3):
+    var1 = par1
+    for ii in xrange(0, len(par2)):
+        var1 = re.sub(par2[ii], par3[ii], var1)
+
+    var1 = re.sub("%26", "&", var1)
+    var1 = re.sub("%3B", ";", var1)
+    return var1.replace('<!--?--><?', '<!--?-->')

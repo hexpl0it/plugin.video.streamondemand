@@ -1,114 +1,80 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # pelisalacarta - XBMC Plugin
 # Conector para vidto.me
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
-#------------------------------------------------------------
+# ------------------------------------------------------------
 
 import re
 
-from core import scrapertools
+from core import jsunpack
 from core import logger
-from lib.jsbeautifier.unpackers import packer
+from core import scrapertools
 
-def get_video_url( page_url , premium = False , user="" , password="", video_password="" ):
-    logger.info("streamondemand.servers.vidtome url="+page_url)
+headers = [
+    ['User-Agent', 'Mozilla/5.0 (Windows NT 6.1; rv:38.0) Gecko/20100101 Firefox/38.0'],
+    ['Accept-Encoding', 'gzip, deflate']
+]
 
-    # Lo pide una vez
-    headers = [['User-Agent','Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14']]
-    data = scrapertools.cache_page( page_url , headers=headers )
-    #logger.info("data="+data)
-    
-    logger.info("streamondemand.servers.vidtome opcion 2")
-    op = scrapertools.get_match(data,'<input type="hidden" name="op" value="([^"]+)"')
-    logger.info("streamondemand.servers.vidtome op="+op)
+
+def get_video_url(page_url, premium=False, user="", password="", video_password=""):
+    logger.info("streamondemand.servers.vidtome url=" + page_url)
+
+    data = scrapertools.cache_page(page_url, headers=headers)
+    # logger.info("data="+data)
+
+    op = scrapertools.get_match(data, '<input type="hidden" name="op" value="([^"]+)"')
     usr_login = ""
-    id = scrapertools.get_match(data,'<input type="hidden" name="id" value="([^"]+)"')
-    logger.info("streamondemand.servers.vidtome id="+id)
-    fname = scrapertools.get_match(data,'<input type="hidden" name="fname" value="([^"]+)"')
-    logger.info("streamondemand.servers.vidtome fname="+fname)
-    referer = scrapertools.get_match(data,'<input type="hidden" name="referer" value="([^"]*)"')
-    logger.info("streamondemand.servers.vidtome referer="+referer)
-    hashstring = scrapertools.get_match(data,'<input type="hidden" name="hash" value="([^"]*)"')
-    logger.info("streamondemand.servers.vidtome hashstring="+hashstring)
-    imhuman = scrapertools.get_match(data,'<input type="submit".*?name="imhuman" value="([^"]+)"').replace(" ","+")
-    logger.info("streamondemand.servers.vidtome imhuman="+imhuman)
-        
+    id = scrapertools.get_match(data, '<input type="hidden" name="id" value="([^"]+)"')
+    fname = scrapertools.get_match(data, '<input type="hidden" name="fname" value="([^"]+)"')
+    referer = scrapertools.get_match(data, '<input type="hidden" name="referer" value="([^"]*)"')
+    hashstring = scrapertools.get_match(data, '<input type="hidden" name="hash" value="([^"]*)"')
+    imhuman = scrapertools.get_match(data, '<input type="submit".*?name="imhuman" value="([^"]+)"').replace(" ", "+")
+
     import time
     time.sleep(10)
 
-    # Lo pide una segunda vez, como si hubieras hecho click en el banner
-    #op=download1&usr_login=&id=z3nnqbspjyne&fname=Coriolanus_DVDrip_Castellano_by_ARKONADA.avi&referer=&hash=nmnt74bh4dihf4zzkxfmw3ztykyfxb24&imhuman=Continue+to+Video
-    #op=download1&usr_login=&id=h6gjvhiuqfsq&fname=GENES1S.avi&referer=&hash=taee4nbdgbuwuxfguju3t6nq2gkdzs6k&imhuman=Proceed+to+video
-    post = "op="+op+"&usr_login="+usr_login+"&id="+id+"&fname="+fname+"&referer="+referer+"&hash="+hashstring+"&imhuman="+imhuman
-    headers.append(["Referer",page_url])
-    body = scrapertools.cache_page( page_url , post=post, headers=headers )
-    logger.info("body="+body)
+    post = "op=" + op + "&usr_login=" + usr_login + "&id=" + id + "&fname=" + fname + "&referer=" + referer + "&hash=" + hashstring + "&imhuman=" + imhuman
+    headers.append(["Referer", page_url])
+    body = scrapertools.cache_page(page_url, post=post, headers=headers)
 
-    data = scrapertools.find_single_match(body,"<script type='text/javascript'>(eval\(function\(p,a,c,k,e,d.*?)</script>")
-    logger.info("data="+data)
-    data = packer.unpack(data)
-    logger.info("data="+data)
+    patron = "<script type='text/javascript'>(eval\(function\(p,a,c,k,e,d.*?)</script>"
+    data = scrapertools.find_single_match(body, patron)
+    data = jsunpack.unpack(data)
 
-    # Extrae la URL
-    #{label:"240p",file:"http://188.240.220.186/drjhpzy4lqqwws4phv3twywfxej5nwmi4nhxlriivuopt2pul3o4bkge5hxa/video.mp4"}
-    video_urls = []
     media_urls = re.findall(r'\{label:"([^"]+)",file:"([^"]+)"\}', data)
     video_urls = []
-    for label,media_url in media_urls:
-        video_urls.append( [ scrapertools.get_filename_from_url(media_url)[-4:]+" ("+label+") [vidto.me]",media_url])
+    for label, media_url in media_urls:
+        video_urls.append(
+            [scrapertools.get_filename_from_url(media_url)[-4:] + " (" + label + ") [vidto.me]", media_url])
 
-    #<a id="lnk_download" href="http://188.240.220.186/drjhpzy4lqqwws4phv3twywfxej5nwmi4nhxlriivuopt2pul3oyvkoe5hxa/INT3NS4HDTS-L4T.mkv">
-    media_url = scrapertools.find_single_match(body,'<a id="lnk_download" href="([^"]+)"')
-    if media_url!="":
-        video_urls.append( [ scrapertools.get_filename_from_url(media_url)[-4:]+" (ORIGINAL) [vidto.me]",media_url])
+    patron = '<a id="lnk_download" href="([^"]+)"'
+    media_url = scrapertools.find_single_match(body, patron)
+    if media_url != "":
+        video_urls.append([scrapertools.get_filename_from_url(media_url)[-4:] + " (ORIGINAL) [vidto.me]", media_url])
 
     for video_url in video_urls:
-        logger.info("streamondemand.servers.vidtome %s - %s" % (video_url[0],video_url[1]))
+        logger.info("streamondemand.servers.vidtome %s - %s" % (video_url[0], video_url[1]))
 
     return video_urls
 
-# Encuentra vídeos del servidor en el texto pasado
-def find_videos(data):
 
-    # Añade manualmente algunos erróneos para evitarlos
+def find_videos(data):
     encontrados = set()
     devuelve = []
 
-    #http://vidto.me/z3nnqbspjyne
-    patronvideos  = 'vidto.me/([a-z0-9A-Z]+)'
-    logger.info("streamondemand.servers.vidtome find_videos #"+patronvideos+"#")
-    matches = re.compile(patronvideos,re.DOTALL).findall(data)
+    patronvideos = r'//(?:www\.)?vidto\.me/(?:embed-)?([0-9A-Za-z]+)'
+    logger.info("streamondemand.servers.vidtome find_videos #" + patronvideos + "#")
+    matches = re.compile(patronvideos, re.DOTALL).findall(data)
 
     for match in matches:
         titulo = "[vidto.me]"
-        url = "http://vidto.me/"+match+".html"
+        url = "http://vidto.me/" + match + ".html"
         if url not in encontrados:
-            logger.info("  url="+url)
-            devuelve.append( [ titulo , url , 'vidtome' ] )
+            logger.info("  url=" + url)
+            devuelve.append([titulo, url, 'vidtome'])
             encontrados.add(url)
         else:
-            logger.info("  url duplicada="+url)
-
-    #http://vidto.me/embed-z3nnqbspjyne
-    patronvideos  = 'vidto.me/embed-([a-z0-9A-Z]+)'
-    logger.info("streamondemand.servers.vidtome find_videos #"+patronvideos+"#")
-    matches = re.compile(patronvideos,re.DOTALL).findall(data)
-
-    for match in matches:
-        titulo = "[vidto.me]"
-        url = "http://vidto.me/"+match+".html"
-        if url not in encontrados:
-            logger.info("  url="+url)
-            devuelve.append( [ titulo , url , 'vidtome' ] )
-            encontrados.add(url)
-        else:
-            logger.info("  url duplicada="+url)
+            logger.info("  url duplicada=" + url)
 
     return devuelve
-
-def test():
-
-    video_urls = get_video_url("http://vidto.me/h6gjvhiuqfsq.html")
-
-    return len(video_urls)>0

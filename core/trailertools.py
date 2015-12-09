@@ -403,7 +403,7 @@ def GetVideoFeed(titulo,solo="false"):
                 if c > 10:
                     return (devuelve)
 
-    print '%s Trailers encontrados en Modulo: GetVideoFeed()' % str(c)
+    print '%s Trailer trovati nel modulo: GetVideoFeed()' % str(c)
     return (devuelve)
     
 def youtubeplay(params,url,category):
@@ -421,5 +421,5 @@ def youtubeplay(params,url,category):
     
 def alertaerror():
     ventana = xbmcgui.Dialog()
-    ok= ventana.ok ("Plugin streamondemand", "Uuppss...la calidad elegida en configuracion",'no esta disponible o es muy baja',"elijá otra calidad distinta y vuelva a probar")
+    ok= ventana.ok ("Plugin streamondemand", "Uuppss...impostazioni di qualità scelte",'non disponibile o troppo limitata',"seleziona una qualità differente e riprova")
 

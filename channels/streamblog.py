@@ -4,12 +4,12 @@
 # Canal para piratestreaming
 # http://blog.tvalacarta.info/plugin-xbmc/streamondemand.
 # ------------------------------------------------------------
-import urlparse
 import re
 import sys
+import urlparse
 
-from core import logger
 from core import config
+from core import logger
 from core import scrapertools
 from core.item import Item
 from servers import servertools
@@ -54,13 +54,19 @@ def mainlist(item):
                      url="%s/serie-tv/" % host,
                      thumbnail="http://xbmc-repo-ackbarr.googlecode.com/svn/trunk/dev/skin.cirrus%20extended%20v2/extras/moviegenres/New%20TV%20Shows.png"),
                 Item(channel=__channel__,
+                     title="[COLOR yellow]Cerca Serie TV...[/COLOR]",
+                     action="search",
+                     extra="serie",
+                     thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search"),
+                Item(channel=__channel__,
                      title="[COLOR azure]Animazione[/COLOR]",
                      action="peliculas",
                      url="%s/animazione/" % host,
                      thumbnail="http://orig09.deviantart.net/df5a/f/2014/169/2/a/fist_of_the_north_star_folder_icon_by_minacsky_saya-d7mq8c8.png"),
                 Item(channel=__channel__,
                      title="[COLOR yellow]Cerca...[/COLOR]",
-                     action="search", thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search")]
+                     action="search",
+                     thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search")]
 
     return itemlist
 
@@ -73,7 +79,8 @@ def categorias(item):
     logger.info(data)
 
     # Narrow search by selecting only the combo
-    bloque = scrapertools.get_match(data, '<li class="drop"><a href="#" class="navlink">(.*?)<div class="bl_search">')
+    patron = '<li class="drop"><a href="#" class="navlink">(.*?)<div class="bl_search">'
+    bloque = scrapertools.get_match(data, patron)
 
     # The categories are the options for the combo
     patron = '<li><a href="([^"]+)">(.*?)</a></li>'
@@ -135,7 +142,7 @@ def results(item):
             "title=[" + scrapedtitle + "], url=[" + scrapedurl + "], thumbnail=[" + scrapedthumbnail + "]")
         itemlist.append(
             Item(channel=__channel__,
-                 action="findvideos",
+                 action="episodios" if item.extra == "serie" else "findvideos",
                  title="[COLOR azure]" + scrapedtitle + "[/COLOR]",
                  url=scrapedurl,
                  thumbnail=host + scrapedthumbnail,
@@ -210,34 +217,64 @@ def peliculas(item):
 
 
 def episodios(item):
+    def load_episodios(html, item, itemlist, lang_title):
+        for data in scrapertools.decodeHtmlentities(html).split('<br />'):
+            # Extrae las entradas
+            end = data.find('<a ')
+            if end > 0:
+                scrapedtitle = re.sub(r'<[^>]*>', '', data[:end]).strip()
+            else:
+                scrapedtitle = ''
+            title = scrapertools.find_single_match(scrapedtitle, '\d+[^\d]+\d+')
+            if title == '':
+                title = scrapedtitle
+            if title != '':
+                itemlist.append(
+                    Item(channel=__channel__,
+                         action="findvid_serie",
+                         title=title + " (" + lang_title + ")",
+                         url=item.url,
+                         thumbnail=item.thumbnail,
+                         extra=data,
+                         fulltitle=item.fulltitle,
+                         show=item.show))
+
     logger.info("streamondemand.streamblog episodios")
 
     itemlist = []
 
     # Descarga la página
-    data = scrapertools.cache_page(item.url, headers=headers)
-    data = scrapertools.decodeHtmlentities(data)
+    data = scrapertools.cache_page(item.url)
 
-    patron = '<!--/colorend--><br />(.+ StreamNowMovies HD </a>)'
-    matches = re.compile(patron, re.DOTALL).findall(data)
+    lang_titles = []
+    starts = []
+    patron = r"STAGIONE.*?ITA"
+    matches = re.compile(patron, re.IGNORECASE).finditer(data)
     for match in matches:
-        for data in match.split('<br />'):
-            # Extrae las entradas
-            scrapedtitle = data.split('<a ')[0]
-            itemlist.append(
-                Item(channel=__channel__,
-                     action="findvid_serie",
-                     title=scrapedtitle,
-                     url=item.url,
-                     thumbnail=item.thumbnail,
-                     extra=data,
-                     fulltitle=item.fulltitle,
-                     show=item.show))
+        season_title = match.group()
+        if season_title != '':
+            lang_titles.append('SUB ITA' if 'SUB' in season_title.upper() else 'ITA')
+            starts.append(match.end())
+
+    i = 1
+    len_lang_titles = len(lang_titles)
+
+    while i <= len_lang_titles:
+        inizio = starts[i - 1]
+        fine = starts[i] if i < len_lang_titles else -1
+
+        html = data[inizio:fine]
+        lang_title = lang_titles[i - 1]
+
+        load_episodios(html, item, itemlist, lang_title)
+
+        i += 1
 
     if config.get_library_support() and len(itemlist) != 0:
         itemlist.append(
             Item(channel=__channel__,
-                 title=item.title, url=item.url,
+                 title=item.title,
+                 url=item.url,
                  action="add_serie_to_library",
                  extra="episodios",
                  show=item.show))

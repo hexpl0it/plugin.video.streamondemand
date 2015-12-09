@@ -1,5 +1,4 @@
 #channels
-altadefinizioneclick
 animesubita
 asiansubita
 ayuda
@@ -35,4 +34,8 @@ tengourl
 walkingdeadita
 webshortfilms
 youtube
+saghe
+tenentecolombo
+effettolunatico
+
 

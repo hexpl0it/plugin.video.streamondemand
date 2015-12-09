@@ -5,17 +5,11 @@
 # http://blog.tvalacarta.info/plugin-xbmc/streamondemand.
 # ------------------------------------------------------------
 import re
-import os
-import sys
-import time
-import urllib2
-import urlparse
 
 from core import config
 from core import logger
 from core import scrapertools
 from core.item import Item
-from servers import servertools
 
 __channel__ = "southparkita"
 __category__ = "S,A"
@@ -23,14 +17,7 @@ __type__ = "generic"
 __title__ = "SouthParkITA Streaming"
 __language__ = "IT"
 
-sito = "http://southparkita.altervista.org/south-park-ita-streaming/"
-
-headers = [
-    ['User-Agent', 'Mozilla/5.0 (Windows NT 6.1; rv:38.0) Gecko/20100101 Firefox/38.0'],
-    ['Accept-Encoding', 'gzip, deflate'],
-    ['Referer', 'http://southparkita.altervista.org/south-park-ita-streaming/'],
-    ['Connection', 'keep-alive']
-]
+host = "http://southparkita.altervista.org/south-park-ita-streaming/"
 
 DEBUG = config.get_setting("debug")
 
@@ -44,15 +31,13 @@ def mainlist(item):
     itemlist = []
 
     # Descarga la página
-    data = scrapertools.cachePage(sito)
+    data = scrapertools.cache_page(host)
     logger.info(data)
-
 
     itemlist.append(
         Item(channel=__channel__,
-                action="mainlist",
-                title="[COLOR green]Ricarica...[/COLOR]"))
-
+             action="mainlist",
+             title="[COLOR green]Ricarica...[/COLOR]"))
 
     # Extrae las entradas (carpetas)
     patronvideos = '<li id="menu-item-\d{4}.*?\d{4}"><a href="([^"]+)">([^<]+)<\/a><\/li>'
@@ -72,8 +57,6 @@ def mainlist(item):
                  title="[COLOR azure]" + scrapedtitle + "[/COLOR]",
                  url=scrapedurl))
 
-    
-
     return itemlist
 
 
@@ -83,19 +66,18 @@ def listepisodes(item):
     itemlist = []
 
     # Descarga la página
-    data = scrapertools.cachePage(item.url)
+    data = scrapertools.cache_page(item.url)
 
     cicla = True
     cnt = 2
     while cicla:
-        data = data + scrapertools.cachePage(item.url + 'page/' + str(cnt) + '/')
+        data = data + scrapertools.cache_page(item.url + 'page/' + str(cnt) + '/')
         logger.info(item.url + 'page/' + str(cnt) + '/')
         patronvideos = '<title>Pagina non trovata.*?<\/title>'
         matches = re.compile(patronvideos, re.DOTALL).finditer(data)
         cnt += 1
         logger.info(str(cnt))
-        if matches :cicla = False
-    
+        if matches: cicla = False
 
     logger.info(data)
 
@@ -112,26 +94,26 @@ def listepisodes(item):
         # Añade al listado de XBMC
         itemlist.append(
             Item(channel=__channel__,
-                 action="play",
-                 fulltitle=scrapedtitle,
-                 show=scrapedtitle,
-                 title="[COLOR azure]"+ scrapedtitle + "[/COLOR]",
+                 action="findvideos",
+                 fulltitle=item.fulltitle,
+                 show=item.show,
+                 title="[COLOR azure]" + scrapedtitle + "[/COLOR]",
                  url=scrapedurl))
 
-    return itemlist
-
-def play(item):
-    logger.info("[cineblog01.py] play")
-
-    data = scrapertools.cachePage(item.url)
-
-    itemlist = servertools.find_video_items(data=data)
-
-    for videoitem in itemlist:
-        videoitem.title = item.show
-        videoitem.fulltitle = item.fulltitle
-        videoitem.show = item.show
-        videoitem.thumbnail = item.thumbnail
-        videoitem.channel = __channel__
+    if config.get_library_support() and len(itemlist) != 0:
+        itemlist.append(
+            Item(channel=__channel__,
+                 title=item.title,
+                 url=item.url,
+                 action="add_serie_to_library",
+                 extra="listepisodes",
+                 show=item.show))
+        itemlist.append(
+            Item(channel=item.channel,
+                 title="Scarica tutti gli episodi della serie",
+                 url=item.url,
+                 action="download_all_episodes",
+                 extra="listepisodes",
+                 show=item.show))
 
     return itemlist

@@ -35,12 +35,16 @@ def mainlist(item):
                      title="[COLOR azure]Aggiornamenti[/COLOR]",
                      action="peliculas",
                      url="%s/film-aggiornamenti.php" % host,
-                     thumbnail="http://dc584.4shared.com/img/XImgcB94/s7/13feaf0b538/saquinho_de_pipoca_01"),
+                     thumbnail="http://orig03.deviantart.net/6889/f/2014/079/7/b/movies_and_popcorn_folder_icon_by_matheusgrilo-d7ay4tw.png"),
                 Item(channel=__channel__,
                      title="[COLOR azure]Contenuti per Genere[/COLOR]",
                      action="categorias",
                      url=host,
                      thumbnail="http://xbmc-repo-ackbarr.googlecode.com/svn/trunk/dev/skin.cirrus%20extended%20v2/extras/moviegenres/All%20Movies%20by%20Genre.png"),
+                Item(channel=__channel__,
+                     title="[COLOR yellow]Cerca...[/COLOR]",
+                     action="search",
+                     thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search"),
                 Item(channel=__channel__,
                      title="[COLOR azure]Archivio Serie TV[/COLOR]",
                      action="categoryarchive",
@@ -53,9 +57,11 @@ def mainlist(item):
                      url="%s/serietv-aggiornamenti.php" % host,
                      thumbnail="http://xbmc-repo-ackbarr.googlecode.com/svn/trunk/dev/skin.cirrus%20extended%20v2/extras/moviegenres/New%20TV%20Shows.png"),
                 Item(channel=__channel__,
-                     title="[COLOR yellow]Cerca...[/COLOR]",
+                     title="[COLOR yellow]Cerca Serie TV...[/COLOR]",
                      action="search",
+                     extra="serie",
                      thumbnail="http://dc467.4shared.com/img/fEbJqOum/s7/13feaf0c8c0/Search")]
+
     return itemlist
 
 
@@ -181,11 +187,15 @@ def cerca(item):
 
     # Descarga la pagina
     data = scrapertools.cache_page(item.url)
+
+    if item.extra == "serie":
+        data = data.split('Serie TV Complete')[1]
+
     bloque = scrapertools.get_match(data, '<!-- Featured Item -->(.*?)<!-- End of Content -->')
 
     # Extrae las entradas (carpetas)
-    patron = '<img src=(.*?) alt="featured item" style="width: 80.8px; height: 109.6px;" /></a>\s*<div class="featuredText">\s*'
-    patron += '<b><a href=([^>]+)>([^>]+)</b>'
+    patron = '<img src=(.*?) alt="featured item" style="width:\s+80.8px; height: 109.6px;" /></a>\s*<div class="featuredText">\s*'
+    patron += '<b><a href=([^>]+)>(.*?)</b>'
     matches = re.compile(patron).findall(bloque)
 
     for scrapedthumbnail, scrapedurl, scrapedtitle in matches:
@@ -194,7 +204,7 @@ def cerca(item):
         if DEBUG: logger.info("title=[" + scrapedtitle + "], url=[" + scrapedurl + "]")
         itemlist.append(
             Item(channel=__channel__,
-                 action="findvideos",
+                 action="episodios" if item.extra == "serie" else "findvideos",
                  fulltitle=scrapedtitle,
                  show=scrapedtitle,
                  title="[COLOR azure]" + scrapedtitle + "[/COLOR]",
@@ -250,7 +260,7 @@ def episodios(item):
 
     itemlist = []
 
-    ## Descarga la página
+    # Descarga la página
     data = scrapertools.cache_page(item.url)
 
     start = data.find('<!--googleoff: all-->')
@@ -307,7 +317,7 @@ def episodios(item):
 def findvid_serie(item):
     logger.info("[piratestreaming.py] findvideos")
 
-    ## Descarga la página
+    # Descarga la página
     data = item.extra
 
     itemlist = servertools.find_video_items(data=data)

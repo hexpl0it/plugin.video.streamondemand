@@ -6,30 +6,35 @@
 # ------------------------------------------------------------
 
 import re
+import urllib
 
-from core import scrapertools
+from core import jsunpack
 from core import logger
+from core import scrapertools
 
-
-def test_video_exists(page_url):
-    logger.info("streamondemand.videomega test_video_exists(page_url='%s')" % page_url)
-
-    return True, ""
+headers = [
+    ['User-Agent',
+     'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'],
+]
 
 
 def get_video_url(page_url, premium=False, user="", password="", video_password=""):
     logger.info("streamondemand.videomega get_video_url(page_url='%s')" % page_url)
 
-    # data = scrapertools.cache_page(page_url)
-    data = scrapertools.downloadpage(page_url, follow_redirects=False)
+    headers.append(['Referer', page_url])
+    data = scrapertools.cache_page(page_url, headers=headers)
     video_urls = []
 
-    location = scrapertools.find_single_match(data, '<source src="([^"]+)"')
-    logger.info("streamondemand.videomega location=" + location)
+    patron = r"(eval.function.p,a,c,k,e,.*?)\s*</script>"
+    data = scrapertools.find_single_match(data, patron)
+    if data != '':
+        data = jsunpack.unpack(data)
 
-    # http://st100.u1.videomega.tv/v/bf38b3577874d7ce424c1c87d6d1b8d9.mp4?st=kuiAz1XJ7XFzOCnaleGVxA&start=0
-    # http://st100.u1.videomega.tv/v/bf38b3577874d7ce424c1c87d6d1b8d9.mp4?st=kuiAz1XJ7XFzOCnaleGVxA
-    video_urls.append([scrapertools.get_filename_from_url(location)[-4:] + " [videomega]", location])
+        location = scrapertools.find_single_match(data, r'"src"\s*,\s*"([^"]+)')
+        location += '|' + urllib.urlencode(dict(headers))
+        logger.info("streamondemand.videomega location=" + location)
+
+        video_urls.append([scrapertools.get_filename_from_url(location)[-4:] + " [videomega]", location])
 
     for video_url in video_urls:
         logger.info("streamondemand.videomega %s - %s" % (video_url[0], video_url[1]))
@@ -42,29 +47,19 @@ def find_videos(data):
     encontrados = set()
     devuelve = []
 
-    # http://videomega.net/auoxxtvyoy
-    # http://videomega.net/auoxxtvyoy
-    # http://videomega.tv/?ref=NcYTGcGNUY
+    pattern = r'//(?:www.)?videomega\.tv/(?:(?:iframe|cdn|validatehash|view)\.php)?\?(?:ref|hashkey)=([a-zA-Z0-9]+)'
 
-    patterns = [
-        r'videomega.tv/([A-Za-z0-9]+)',
-        r'videomega.tv/cdn.php\?ref\=([A-Za-z0-9]+)',
-        r'videomega.tv/\?ref\=([A-Za-z0-9]+)'
-    ]
+    logger.info("[videomega.py] find_videos #" + pattern + "#")
+    matches = re.compile(pattern, re.DOTALL).findall(data)
 
-    for pattern in patterns:
-
-        logger.info("[videomega.py] find_videos #" + pattern + "#")
-        matches = re.compile(pattern, re.DOTALL).findall(data)
-
-        for match in matches:
-            titulo = "[videomega]"
-            url = "http://videomega.tv/view.php?ref=" + match + "&width=100%&height=400"
-            if url not in encontrados:
-                logger.info("  url=" + url)
-                devuelve.append([titulo, url, 'videomega'])
-                encontrados.add(url)
-            else:
-                logger.info("  url duplicada=" + url)
+    for media_id in matches:
+        titulo = "[videomega]"
+        url = 'http://videomega.tv/cdn.php?ref=%s' % media_id
+        if url not in encontrados:
+            logger.info("  url=" + url)
+            devuelve.append([titulo, url, 'videomega'])
+            encontrados.add(url)
+        else:
+            logger.info("  url duplicada=" + url)
 
     return devuelve

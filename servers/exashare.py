@@ -9,8 +9,8 @@
 import re
 import time
 
-from core import scrapertools
 from core import logger
+from core import scrapertools
 
 headers = [
     ['User-Agent', 'Mozilla/5.0 (Windows NT 6.1; rv:38.0) Gecko/20100101 Firefox/38.0'],
@@ -55,7 +55,7 @@ def get_video_url(page_url, premium=False, user="", password="", video_password=
     # URL del vídeo
     url = re.findall('file:\s*"([^"]+)"', data)[0]
 
-    video_urls.append([".mp4" + " [exashare]", url])
+    video_urls.append([scrapertools.get_filename_from_url(url)[-4:] + " [exashare]", url])
 
     return video_urls
 
@@ -65,7 +65,7 @@ def find_videos(text):
     encontrados = set()
     devuelve = []
 
-    patronvideos = 'http://(?:www.)?exashare.com/(?:embed\-)?([0-9A-Za-z]+)(?:\-[0-9]+x[0-9]+.html)?'
+    patronvideos = r'//(?:www\.)?exashare\.com/(?:embed-)?(?!make)(?!image)(?!login)(?!contact)(?!player)([0-9A-Za-z]+)(?:\-[0-9]+x[0-9]+\.html)?'
     logger.info("[exashare.py] find_videos #" + patronvideos + "#")
 
     matches = re.compile(patronvideos, re.DOTALL).findall(text)

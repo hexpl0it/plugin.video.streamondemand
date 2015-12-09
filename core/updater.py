@@ -190,7 +190,7 @@ def checkforupdates(plugin_mode=True):
         else:
 
             import xbmcgui
-            yes_pressed = xbmcgui.Dialog().yesno( "Versión "+tag_publicada+" disponible" , "¿Quieres instalarla?" )
+            yes_pressed = xbmcgui.Dialog().yesno( "Versione "+tag_publicada+" disponibile" , "Installarla?" )
 
             if yes_pressed:
                 params = {"version":tag_publicada}
