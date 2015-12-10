@@ -101,7 +101,7 @@ def channeltypes(params,url,category):
         lista = getchanneltypes()
         for item in lista:
             addfolder(item.title,item.channel,item.action,item.category,item.thumbnail,item.thumbnail)
-       
+
         # Label (top-right)...
         import xbmcplugin
         xbmcplugin.setPluginCategory( handle=int( sys.argv[ 1 ] ), category="" )
@@ -242,6 +242,8 @@ def channels_list():
     if config.get_setting("personalchannel5")=="true":
         itemlist.append( Item( title=config.get_setting("personalchannelname5") , channel="personal5" , language="" , category="" , type="generic"  ))
     #itemlist.append( Item( title="[COLOR red]SkyStreaming[/COLOR]"        , channel="skystreaming"       , language="IT"    , category="B,F"       , type="generic"))
+    if config.get_setting("adult_content")=="true":
+        itemlist.append( Item( title="[COLOR red]PORNO[/COLOR]"      , channel="altadefinizione01"           , language="IT"    , category="B,F,A"   , type="generic"))
     itemlist.append( Item( title="[COLOR azure]AltaDefinizione01[/COLOR]"      , channel="altadefinizione01"           , language="IT"    , category="B,F,A"   , type="generic"))
     itemlist.append( Item( title="[COLOR azure]Altadefinizione.click[/COLOR]" , channel="altadefinizioneclick" , language="IT" , category="F" , type="generic"))
     itemlist.append( Item( title="[COLOR azure]Anime Sub Ita[/COLOR]"   , channel="animesubita"           , language="IT"    , category="A"   , type="generic"))
