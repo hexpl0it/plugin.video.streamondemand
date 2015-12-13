@@ -17,7 +17,7 @@ __type__ = "generic"
 __title__ = "SouthParkITA Streaming"
 __language__ = "IT"
 
-host = "http://southparkita.altervista.org/south-park-ita-streaming/"
+host = "http://southparkita.altervista.org/south-park-ita-streaming"
 
 DEBUG = config.get_setting("debug")
 

@@ -242,8 +242,6 @@ def channels_list():
     if config.get_setting("personalchannel5")=="true":
         itemlist.append( Item( title=config.get_setting("personalchannelname5") , channel="personal5" , language="" , category="" , type="generic"  ))
     #itemlist.append( Item( title="[COLOR red]SkyStreaming[/COLOR]"        , channel="skystreaming"       , language="IT"    , category="B,F"       , type="generic"))
-    if config.get_setting("adult_content")=="true":
-        itemlist.append( Item( title="[COLOR red]PORNO[/COLOR]"      , channel="altadefinizione01"           , language="IT"    , category="B,F,A"   , type="generic"))
     itemlist.append( Item( title="[COLOR azure]AltaDefinizione01[/COLOR]"      , channel="altadefinizione01"           , language="IT"    , category="B,F,A"   , type="generic"))
     itemlist.append( Item( title="[COLOR azure]Altadefinizione.click[/COLOR]" , channel="altadefinizioneclick" , language="IT" , category="F" , type="generic"))
     itemlist.append( Item( title="[COLOR azure]Anime Sub Ita[/COLOR]"   , channel="animesubita"           , language="IT"    , category="A"   , type="generic"))
@@ -307,6 +305,7 @@ def channels_list():
     itemlist.append( Item( title="[COLOR azure]StreamingPopcorn[/COLOR]"    , channel="streamingpopcorn"         , language="IT" , category="F"        , type="generic" ,thumbnail="http://streamingpopcorn.com/portal/images/logo2.png"))
     itemlist.append( Item( title="[COLOR azure]Tantifilm[/COLOR]"        , channel="tantifilm"       , language="IT"    , category="B,F"       , type="generic"))
     itemlist.append( Item( title="[COLOR azure]Tenente Colombo Streaming[/COLOR]"        , channel="tenentecolombo"       , language="IT"    , category="S"       , type="generic" ,thumbnail="http://biografieonline.it/img/bio/p/Peter_Falk.jpg"))
+    itemlist.append( Item( title="[COLOR azure]The Lord of Streaming[/COLOR]"        , channel="lordofstreaming"       , language="IT"    , category="S, M"       , type="generic" ,thumbnail=""))
     #itemlist.append( Item( title="[COLOR azure]TheWalkingDeadITA Streaming[/COLOR]"      , channel="walkingdeadita"           , language="IT"    , category="S"   , type="generic",thumbnail="http://walkingdeadstreamingita.altervista.org/images/logo.png"))
     itemlist.append( Item( title="[COLOR azure]VediSerie[/COLOR]"        , channel="vediserie"       , language="IT"    , category="B,S"       , type="generic" ,thumbnail="http://www.vediserie.com/wp-content/uploads/2015/09/logo-vediseriea.png"))
     itemlist.append( Item( title="[COLOR azure]WebShortFilms[/COLOR]"        , channel="webshortfilms"       , language="IT"    , category="F,D"       , type="generic" ,thumbnail="https://webshortfilms.files.wordpress.com/2012/07/header_1.jpg"))
