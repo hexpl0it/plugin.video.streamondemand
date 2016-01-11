@@ -39,11 +39,11 @@ def mainlist(item):
                      action="novedades",
                      url=host,
                      thumbnail="http://repository-butchabay.googlecode.com/svn/branches/eden/skin.cirrus.extended.v2/extras/moviegenres/Anime.png"),
-#                Item(channel=__channel__,
-#                     title="[COLOR azure]Anime - Per Genere[/COLOR]",
-#                     action="categorias",
-#                     url=host + "cerca-per-genere/",
-#                     thumbnail="http://xbmc-repo-ackbarr.googlecode.com/svn/trunk/dev/skin.cirrus%20extended%20v2/extras/moviegenres/Genre.png"),
+                Item(channel=__channel__,
+                     title="[COLOR azure]Anime - Per Genere[/COLOR]",
+                     action="genere",
+                     url=host + "cerca-per-genere/",
+                     thumbnail="http://xbmc-repo-ackbarr.googlecode.com/svn/trunk/dev/skin.cirrus%20extended%20v2/extras/moviegenres/Genre.png"),
                 Item(channel=__channel__,
                      title="[COLOR azure]Serie concluse[/COLOR]",
                      action="concluse",
@@ -78,12 +78,12 @@ def novedades(item):
         scrapedtitle = scrapertools.decodeHtmlentities(scrapedtitle)
 
         itemlist.append(
-            Item(channel=__channel__,
-                 action="findvideos",
-                 title=scrapedtitle,
-                 url=scrapedurl,
-                 thumbnail=scrapedthumbnail,
-                 viewmode="movie_with_plot"))
+                Item(channel=__channel__,
+                     action="findvid",
+                     title=scrapedtitle,
+                     url=scrapedurl,
+                     thumbnail=scrapedthumbnail,
+                     viewmode="movie_with_plot"))
 
     return itemlist
 
@@ -102,14 +102,15 @@ def categorias(item):
 
     for scrapedtitle, scrapedurl in matches:
         itemlist.append(
-            Item(channel=__channel__,
-                 action="episodios",
-                 title=scrapedtitle,
-                 fulltitle=scrapedtitle,
-                 show=scrapedtitle,
-                 url=scrapedurl))
+                Item(channel=__channel__,
+                     action="episodios",
+                     title=scrapedtitle,
+                     fulltitle=scrapedtitle,
+                     show=scrapedtitle,
+                     url=scrapedurl))
 
     return itemlist
+
 
 def concluse(item):
     logger.info("streamondemand.animesubita categorias")
@@ -119,20 +120,72 @@ def concluse(item):
     data = scrapertools.cache_page(item.url, headers=headers)
 
     # The categories are the options for the combo
-    patron = '<li class="jcl_category "><a href="(.*?)">(.*?)</a></li>'
+    patron = '<li class="jcl_category "><a href="([^"]+)">([^"]+)</a></li>'
 
     matches = re.compile(patron, re.DOTALL).findall(data)
 
     for scrapedurl, scrapedtitle in matches:
         itemlist.append(
-            Item(channel=__channel__,
-                 action="episodios",
-                 title=scrapedtitle,
-                 fulltitle=scrapedtitle,
-                 show=scrapedtitle,
-                 url=scrapedurl))
+                Item(channel=__channel__,
+                     action="episodios",
+                     title=scrapedtitle,
+                     fulltitle=scrapedtitle,
+                     show=scrapedtitle,
+                     url=scrapedurl))
 
     return itemlist
+
+
+def genere(item):
+    logger.info("streamondemand.animesubita categorias")
+
+    itemlist = []
+
+    data = scrapertools.cache_page(item.url, headers=headers)
+
+    # The categories are the options for the combo
+    patron = '<li><a title="([^"]+)" href="([^"]+)">.*?</a></li>'
+
+    matches = re.compile(patron, re.DOTALL).findall(data)
+
+    for scrapedtitle, scrapedurl in matches:
+        scrapedtitle = scrapertools.decodeHtmlentities(scrapedtitle)
+        itemlist.append(
+                Item(channel=__channel__,
+                     action="generedisplay",
+                     title=scrapedtitle,
+                     fulltitle=scrapedtitle,
+                     show=scrapedtitle,
+                     url=scrapedurl))
+
+    return itemlist
+
+
+def generedisplay(item):
+    logger.info("streamondemand.animesubita categorias")
+
+    itemlist = []
+
+    data = scrapertools.cache_page(item.url, headers=headers)
+
+    # The categories are the options for the combo
+    patron = '<a href="([^"]+)"> <img src="([^"]+)" alt="([^"]+)" title=".*?">'
+
+    matches = re.compile(patron, re.DOTALL).findall(data)
+
+    for scrapedurl, scrapedthumbnail, scrapedtitle in matches:
+        scrapedtitle = scrapertools.decodeHtmlentities(scrapedtitle)
+        itemlist.append(
+                Item(channel=__channel__,
+                     action="episodios",
+                     title=scrapedtitle,
+                     fulltitle=scrapedtitle,
+                     show=scrapedtitle,
+                     url=scrapedurl,
+                     thumbnail=scrapedthumbnail))
+
+    return itemlist
+
 
 def selection(item):
     logger.info("streamondemand.animesubita peliculas")
@@ -148,22 +201,24 @@ def selection(item):
 
     for scrapedurl, scrapedtitle in matches:
         itemlist.append(
-            Item(channel=__channel__,
-                 action="episodios",
-                 title=scrapedtitle,
-                 fulltitle=scrapedtitle,
-                 show=scrapedtitle,
-                 url=scrapedurl))
+                Item(channel=__channel__,
+                     action="episodios2",
+                     title=scrapedtitle,
+                     fulltitle=scrapedtitle,
+                     show=scrapedtitle,
+                     url=scrapedurl))
 
     return itemlist
 
 
-def episodios(item):
+def episodios2(item):
     logger.info("streamondemand.animesubita peliculas")
 
     itemlist = []
 
     # Descarga la pagina
+    headers.append(['Referer', item.url])
+
     data = scrapertools.cache_page(item.url, headers=headers)
 
     # Extrae las entradas (carpetas)
@@ -172,28 +227,58 @@ def episodios(item):
 
     for scrapedurl, scrapedtitle in matches:
         itemlist.append(
-            Item(channel=__channel__,
-                 action="findvideos",
-                 title=scrapedtitle,
-                 fulltitle=item.fulltitle,
-                 show=item.show,
-                 url=scrapedurl))
+                Item(channel=__channel__,
+                     action="findvid",
+                     title=scrapedtitle,
+                     fulltitle=item.fulltitle,
+                     show=item.show,
+                     url=scrapedurl))
 
     if config.get_library_support() and len(itemlist) != 0:
         itemlist.append(
-            Item(channel=__channel__,
-                 title=item.title,
-                 url=item.url,
-                 action="add_serie_to_library",
-                 extra="episodios",
-                 show=item.show))
+                Item(channel=__channel__,
+                     title=item.title,
+                     url=item.url,
+                     action="add_serie_to_library",
+                     extra="episodios",
+                     show=item.show))
+
+    return itemlist
+
+
+def episodios(item):
+    logger.info("streamondemand.animesubita episodios")
+
+    itemlist = []
+
+    # Descarga la pagina
+    headers.append(['Referer', item.url])
+
+    data = scrapertools.cache_page(item.url, headers=headers)
+
+    # Extrae las entradas (carpetas)
+    patron = '<a href="([^"]+)"> <img src="([^"]+)" alt="([^"]+)".*?'
+
+    matches = re.compile(patron, re.DOTALL).findall(data)
+
+    for scrapedurl, scrapedthumbnail, scrapedtitle in matches:
         itemlist.append(
-            Item(channel=item.channel,
-                 title="Scarica tutti gli episodi della serie",
-                 url=item.url,
-                 action="download_all_episodes",
-                 extra="episodios",
-                 show=item.show))
+                Item(channel=__channel__,
+                     action="findvid",
+                     title=scrapedtitle,
+                     fulltitle=item.fulltitle,
+                     show=item.show,
+                     url=scrapedurl,
+                     thumbnail=scrapedthumbnail))
+
+    if config.get_library_support() and len(itemlist) != 0:
+        itemlist.append(
+                Item(channel=__channel__,
+                     title=item.title,
+                     url=item.url,
+                     action="add_serie_to_library",
+                     extra="episodios",
+                     show=item.show))
 
     return itemlist
 
@@ -214,7 +299,7 @@ def search(item, texto):
         return []
 
 
-def findvideos(item):
+def findvid(item):
     logger.info("streamondemand.channels.animesubita findvideos")
 
     headers.append(['Referer', item.url])
